@@ -50,6 +50,7 @@ RUN npm install --omit=dev && \
 
 # Expose port 80 for Nginx
 EXPOSE 80
+EXPOSE 8080
 
 # Default environment variables (should be overridden at runtime)
 ENV API_BACKEND_PORT=5000
