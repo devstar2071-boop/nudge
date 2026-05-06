@@ -49,7 +49,6 @@ RUN npm install --omit=dev && \
     npm install -g tsx
 
 # Expose port 80 for Nginx
-EXPOSE 80
 EXPOSE 8080
 
 # Default environment variables (should be overridden at runtime)
