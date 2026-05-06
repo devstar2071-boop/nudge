@@ -1,0 +1,4 @@
+{
+  "name": "Sephora Lens Prototype",
+  "description": "A frontend demonstration of the Sephora Lens AI integration, featuring mock APIs for products and users, and live Gemini API integration for personalized ingredient nudges."
+}
