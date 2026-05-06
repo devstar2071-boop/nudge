@@ -8,10 +8,20 @@ const port = process.env.PORT || 3001;
 // Initialize BigQuery client
 // Note: This requires the GOOGLE_APPLICATION_CREDENTIALS environment variable 
 // to be set in the environment where this Node.js server runs.
-const bigquery = new BigQuery();
+const bigquery = new BigQuery({ projectId: 'sephora-seatech26sin-207' });
 
 app.use(cors());
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[BigQuery API] ${req.method} ${req.url} ${res.statusCode} - ${duration}ms`);
+  });
+  next();
+});
 
 /**
  * API 1: List and show products (Paginated)
@@ -48,9 +58,13 @@ app.get('/api/products', async (req, res) => {
       limit,
       totalPages: Math.ceil(total / limit)
     });
-  } catch (error) {
-    console.error('Error fetching products from BigQuery:', error);
-    res.status(500).json({ error: 'Failed to fetch products' });
+  } catch (error: any) {
+    console.error(`[BigQuery API Error] Failed to fetch products:`, {
+      message: error.message,
+      stack: error.stack,
+      query: req.query
+    });
+    res.status(500).json({ error: 'Failed to fetch products', details: error.message });
   }
 });
 
@@ -63,7 +77,7 @@ app.get('/api/products/:id', async (req, res) => {
     const query = `
       SELECT *
       FROM \`sephora-seatech26sin-207.verified_glow.products\`
-      WHERE productId = @productId
+      WHERE productId = CAST(@productId AS INT64)
       LIMIT 1
     `;
     
@@ -75,13 +89,17 @@ app.get('/api/products/:id', async (req, res) => {
     const [rows] = await bigquery.query(options);
     
     if (rows.length === 0) {
+      console.warn(`[BigQuery API] Product not found: ${productId}`);
       return res.status(404).json({ error: 'Product not found' });
     }
 
     res.json(rows[0]);
-  } catch (error) {
-    console.error('Error fetching product from BigQuery:', error);
-    res.status(500).json({ error: 'Failed to fetch product' });
+  } catch (error: any) {
+    console.error(`[BigQuery API Error] Failed to fetch product ${req.params.id}:`, {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ error: 'Failed to fetch product', details: error.message });
   }
 });
 
@@ -93,17 +111,17 @@ app.get('/api/users/random', async (req, res) => {
   try {
     const query = `
       SELECT 
-        u.id, 
-        u.name, 
-        u.email, 
-        u.loyaltyTier, 
-        u.points,
-        bp.skinType, 
-        bp.skinConcerns, 
-        bp.hairType
+        u.int64_field_0 as id, 
+        'Test User' as name, 
+        'user@example.com' as email, 
+        'Gold' as loyaltyTier, 
+        100 as points,
+        JSON_VALUE(bp.skincare_routine, '$.skin_type') as skinType, 
+        JSON_VALUE(bp.skincare_routine, '$.skin_concerns') as skinConcerns, 
+        JSON_VALUE(bp.haircare_routine, '$.hair_type') as hairType
       FROM \`sephora-seatech26sin-207.verified_glow.users\` u
       LEFT JOIN \`sephora-seatech26sin-207.verified_glow.beauty_profiles\` bp 
-        ON u.id = bp.userId
+        ON u.int64_field_0 = bp.user_id
       ORDER BY RAND()
       LIMIT 1
     `;
@@ -111,6 +129,7 @@ app.get('/api/users/random', async (req, res) => {
     const [rows] = await bigquery.query(query);
 
     if (rows.length === 0) {
+      console.warn(`[BigQuery API] No users found in database`);
       return res.status(404).json({ error: 'No users found' });
     }
 
@@ -143,9 +162,12 @@ app.get('/api/users/random', async (req, res) => {
     };
 
     res.json(userProfile);
-  } catch (error) {
-    console.error('Error fetching random user from BigQuery:', error);
-    res.status(500).json({ error: 'Failed to fetch random user' });
+  } catch (error: any) {
+    console.error(`[BigQuery API Error] Failed to fetch random user:`, {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ error: 'Failed to fetch random user', details: error.message });
   }
 });
 

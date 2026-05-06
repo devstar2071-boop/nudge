@@ -2,7 +2,7 @@ import { UserProfile, PurchaseHistoryItem, PaginatedResponse, Product } from '..
 
 // --- CONFIGURATION ---
 // Points to the Node.js Express server (server/index.ts)
-const BACKEND_API_URL = (typeof process !== 'undefined' && process.env && process.env.BACKEND_API_URL) ? process.env.BACKEND_API_URL : 'http://localhost:3001';
+const BACKEND_API_URL = (typeof process !== 'undefined' && process.env && process.env.BACKEND_API_URL) ? process.env.BACKEND_API_URL : '/api';
 
 // --- FALLBACK MOCK DATA ---
 // Used if the backend API is not reachable, ensuring the prototype still works.
@@ -160,9 +160,9 @@ const transformBQToProduct = (bqData: any, index: number): Product => {
     || `https://picsum.photos/seed/item${index}/400/500`;
 
   return {
-    id: index === 0 ? bqData.productId : `${bqData.productId}-${index}`,
+    id: bqData.productId,
     brand: bqData.brand?.name_en || 'Unknown Brand',
-    name: index === 0 ? bqData.name_en : `${bqData.name_en} (Variant ${index})`,
+    name: bqData.name_en,
     description: bqData.content?.en?.description || '',
     price: price,
     imageUrl: imageUrl,
@@ -175,7 +175,7 @@ const transformBQToProduct = (bqData: any, index: number): Product => {
       if (vPricedItem) vPrice = vPricedItem.price;
       
       return {
-        id: index === 0 ? v.variantId : `${v.variantId}-${index}`,
+        id: v.variantId,
         name: v.name_en,
         sku: v.sap?.reference || v.variantId,
         price: vPrice,
@@ -200,7 +200,7 @@ export const fetchUserAccountData = async (
 
   try {
     // Fetch a random user from the BigQuery backend
-    const response = await fetch(`${BACKEND_API_URL}/api/users/random`);
+    const response = await fetch(`${BACKEND_API_URL}/users/random`);
     if (response.ok) {
       profile = await response.json();
     } else {
@@ -239,7 +239,7 @@ export const fetchProducts = async (
   limit: number = 20
 ): Promise<PaginatedResponse<Product>> => {
   try {
-    const response = await fetch(`${BACKEND_API_URL}/api/products?page=${page}&limit=${limit}`);
+    const response = await fetch(`${BACKEND_API_URL}/products?page=${page}&limit=${limit}`);
     
     if (!response.ok) {
       throw new Error(`Backend API returned status: ${response.status}`);
@@ -280,7 +280,7 @@ export const fetchProducts = async (
  */
 export const fetchProductById = async (id: string): Promise<Product | undefined> => {
   try {
-    const response = await fetch(`${BACKEND_API_URL}/api/products/${id}`);
+    const response = await fetch(`${BACKEND_API_URL}/products/${id}`);
     
     if (!response.ok) {
       throw new Error(`Backend API returned status: ${response.status}`);
@@ -309,7 +309,7 @@ export const trackNudgeInteraction = async (
   action: 'view' | 'helpful' | 'not_helpful'
 ): Promise<{ success: boolean }> => {
   try {
-    const response = await fetch(`${BACKEND_API_URL}/api/interactions`, {
+    const response = await fetch(`${BACKEND_API_URL}/interactions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

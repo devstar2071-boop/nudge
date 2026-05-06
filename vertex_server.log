@@ -1,0 +1,5 @@
+Vertex AI Backend listening at http://localhost:5000
+[Node Proxy] Matched API client: VertexGenAi:generateContent
+[Node Proxy] GOOGLE_CLOUD_PROJECT: cloudshell-gca
+[Node Proxy] Forwarding to Vertex API: https://aiplatform.clients6.google.com/v1/projects/cloudshell-gca/locations/us-central1/publishers/google/models/gemini-1.5-flash:generateContent
+[Node Proxy] Sending JSON response for VertexGenAi:generateContent

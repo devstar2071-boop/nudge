@@ -87,7 +87,7 @@ export const ProductListingPage: React.FC = () => {
                     </div>
                     <span className="text-xs text-gray-500 ml-1">({product.reviewsCount})</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-900 mt-1">${product.price.toFixed(2)}</p>
+                  <p className="text-sm font-bold text-gray-900 mt-1">${product.price ? product.price.toFixed(2) : '0.00'}</p>
                 </div>
               </Link>
             ))}

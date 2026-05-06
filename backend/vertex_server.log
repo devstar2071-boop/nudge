@@ -1,0 +1,9 @@
+◇ injected env (6) from .env.local // tip: ⌘ suppress logs { quiet: true }
+[load-env] result: success
+[load-env] GOOGLE_CLOUD_PROJECT: sephora-seatech26sin-207
+[server.js] process.env.GOOGLE_CLOUD_PROJECT: sephora-seatech26sin-207
+Vertex AI Backend listening at http://localhost:5000
+[Node Proxy] Matched API client: VertexGenAi:generateContent
+[Node Proxy] GOOGLE_CLOUD_PROJECT: sephora-seatech26sin-207
+[Node Proxy] Forwarding to Vertex API: https://us-central1-aiplatform.googleapis.com/v1/projects/sephora-seatech26sin-207/locations/us-central1/publishers/google/models/gemini-1.5-flash:generateContent
+[Node Proxy] Sending JSON response for VertexGenAi:generateContent

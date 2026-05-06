@@ -30,7 +30,7 @@
         pathSegments[0] === '' &&
         pathSegments[2] === 'publishers' &&
         pathSegments[3] === 'google' &&
-        pathSegments[4] === 'models' && urlObj.hostname === HOST_NAME) {
+        pathSegments[4] === 'models' && urlObj.hostname.endsWith(HOST_NAME)) {
           if (!isSafePathSegment(pathSegments[1])) {
             return false;
           }

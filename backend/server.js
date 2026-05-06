@@ -4,7 +4,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import 'dotenv/config';
+import './load-env.js';
 import express from 'express';
 import { GoogleAuth } from 'google-auth-library';
 import fetch from 'node-fetch';
@@ -17,6 +17,7 @@ app.use(express.json({limit: process?.env?.API_PAYLOAD_MAX_SIZE || "7mb"}));
 const PORT = process?.env?.API_BACKEND_PORT || 5000;
 const API_BACKEND_HOST = process?.env?.API_BACKEND_HOST || "127.0.0.1";
 
+console.log('[server.js] process.env.GOOGLE_CLOUD_PROJECT:', process.env.GOOGLE_CLOUD_PROJECT);
 const GOOGLE_CLOUD_LOCATION = process?.env?.GOOGLE_CLOUD_LOCATION;
 const GOOGLE_CLOUD_PROJECT = process?.env?.GOOGLE_CLOUD_PROJECT;
 if (!GOOGLE_CLOUD_PROJECT || !GOOGLE_CLOUD_LOCATION) {
@@ -50,27 +51,30 @@ app.use('/api-proxy', proxyLimiter);
 const API_CLIENT_MAP = [
  {
     name: "VertexGenAi:generateContent",
-    patternForProxy: "https://aiplatform.googleapis.com/{{version}}/publishers/google/models/{{model}}:generateContent",
+    patternForProxy: "https://{{region_prefix}}aiplatform.googleapis.com/{{version}}/publishers/google/models/{{model}}:generateContent",
     getApiEndpoint: (context, params) => {
-      return `https://aiplatform.clients6.google.com/${params['version']}/projects/${context.projectId}/locations/${context.region}/publishers/google/models/${params['model']}:generateContent`;
+      const location = context.region === 'global' ? 'us-central1' : context.region;
+      return `https://${location}-aiplatform.googleapis.com/${params['version']}/projects/${context.projectId}/locations/${context.region}/publishers/google/models/${params['model']}:generateContent`;
     },
     isStreaming: false,
     transformFn: null,
   },
  {
     name: "VertexGenAi:predict",
-    patternForProxy: "https://aiplatform.googleapis.com/{{version}}/publishers/google/models/{{model}}:predict",
+    patternForProxy: "https://{{region_prefix}}aiplatform.googleapis.com/{{version}}/publishers/google/models/{{model}}:predict",
     getApiEndpoint: (context, params) => {
-      return `https://aiplatform.clients6.google.com/${params['version']}/projects/${context.projectId}/locations/${context.region}/publishers/google/models/${params['model']}:predict`;
+      const location = context.region === 'global' ? 'us-central1' : context.region;
+      return `https://${location}-aiplatform.googleapis.com/${params['version']}/projects/${context.projectId}/locations/${context.region}/publishers/google/models/${params['model']}:predict`;
     },
     isStreaming: false,
     transformFn: null,
   },
  {
     name: "VertexGenAi:streamGenerateContent",
-    patternForProxy: "https://aiplatform.googleapis.com/{{version}}/publishers/google/models/{{model}}:streamGenerateContent",
+    patternForProxy: "https://{{region_prefix}}aiplatform.googleapis.com/{{version}}/publishers/google/models/{{model}}:streamGenerateContent",
     getApiEndpoint: (context, params) => {
-      return `https://aiplatform.clients6.google.com/${params['version']}/projects/${context.projectId}/locations/${context.region}/publishers/google/models/${params['model']}:streamGenerateContent`;
+      const location = context.region === 'global' ? 'us-central1' : context.region;
+      return `https://${location}-aiplatform.googleapis.com/${params['version']}/projects/${context.projectId}/locations/${context.region}/publishers/google/models/${params['model']}:streamGenerateContent`;
     },
     isStreaming: true,
     transformFn: (response) => {
@@ -103,7 +107,7 @@ const API_CLIENT_MAP = [
     name: "ReasoningEngine:query",
     patternForProxy: "https://{{endpoint_location}}-aiplatform.googleapis.com/{{version}}/projects/{{project_id}}/locations/{{location_id}}/reasoningEngines/{{engine_id}}:query",
     getApiEndpoint: (context, params) => {
-      return `https://${params['endpoint_location']}-aiplatform.clients6.google.com/v1beta1/projects/${params['project_id']}/locations/${params['location_id']}/reasoningEngines/${params['engine_id']}:query`;
+      return `https://${params['endpoint_location']}-aiplatform.googleapis.com/v1beta1/projects/${params['project_id']}/locations/${params['location_id']}/reasoningEngines/${params['engine_id']}:query`;
     },
     isStreaming: false,
     transformFn: null,
@@ -112,7 +116,7 @@ const API_CLIENT_MAP = [
     name: "ReasoningEngine:streamQuery",
     patternForProxy: "https://{{endpoint_location}}-aiplatform.googleapis.com/{{version}}/projects/{{project_id}}/locations/{{location_id}}/reasoningEngines/{{engine_id}}:streamQuery",
     getApiEndpoint: (context, params) => {
-      return `https://${params['endpoint_location']}-aiplatform.clients6.google.com/v1beta1/projects/${params['project_id']}/locations/${params['location_id']}/reasoningEngines/${params['engine_id']}:streamQuery`;
+      return `https://${params['endpoint_location']}-aiplatform.googleapis.com/v1beta1/projects/${params['project_id']}/locations/${params['location_id']}/reasoningEngines/${params['engine_id']}:streamQuery`;
     },
     isStreaming: true,
     transformFn: null,
@@ -140,7 +144,7 @@ function parsePattern(pattern) {
     params.push(match[1]);
     const literalPart = pattern.substring(lastIndex, match.index);
     parts.push(escapeRegex(literalPart));
-    parts.push(`(?<${match[1]}>[^/]+)`);
+    parts.push(`(?<${match[1]}>[^/]*)`);
     lastIndex = paramRegex.lastIndex;
   }
   parts.push(escapeRegex(pattern.substring(lastIndex)));
@@ -189,14 +193,17 @@ function getRequestHeaders(accessToken) {
 
 // --- Proxy Endpoint ---
 app.post('/api-proxy', async (req, res) => {
+  const start = Date.now();
 
   // Check for the custom header added by the shim
   if (req.headers['x-app-proxy'] !== PROXY_HEADER) {
+    console.warn(`[Node Proxy] 403 Forbidden: Missing or invalid x-app-proxy header`);
     return res.status(403).send('Forbidden: Request must originate from the Vertex App shim.');
   }
 
   const { originalUrl, method, headers, body } = req.body;
   if (!originalUrl) {
+    console.warn(`[Node Proxy] 400 Bad Request: Missing originalUrl`);
     return res.status(400).send('Bad Request: originalUrl is required.');
   }
 
@@ -208,12 +215,13 @@ app.post('/api-proxy', async (req, res) => {
   });
 
   if (!apiClient) {
-    console.error(`[Node Proxy] No API client handler found for URL: ${originalUrl}`);
+    console.error(`[Node Proxy] 404 Not Found: No API client handler found for URL: ${originalUrl}`);
     return res.status(404).json({ error: `No proxy handler found for URL: ${originalUrl}` });
   }
 
   const extractedParams = req.extractedParams;
-  console.log(`[Node Proxy] Matched API client: ${apiClient.name}`);
+  console.log(`[Node Proxy] Matched API client: ${apiClient.name} for ${originalUrl}`);
+  
   try {
     // 2. Get authenticated access token
     const accessToken = await getAccessToken(res);
@@ -222,23 +230,41 @@ app.post('/api-proxy', async (req, res) => {
     // 3. Construct the full API URL using env-set GOOGLE_CLOUD_PROJECT/LOCATION and extracted params
     const context = {projectId: GOOGLE_CLOUD_PROJECT, region: GOOGLE_CLOUD_LOCATION};
     const apiUrl = apiClient.getApiEndpoint(context, extractedParams);
-    console.log(`[Node Proxy] Forwarding to Vertex API: ${apiUrl}`);
-
+    
     // 4. Prepare headers for the API call
     const apiHeaders = getRequestHeaders(accessToken);
 
     const apiFetchOptions = {
       method: method || 'POST',
       headers: {...apiHeaders, ...headers},
-      body: body ? body : undefined,
+      body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
     };
+
+    console.log(`[Node Proxy] Forwarding ${method || 'POST'} to Vertex AI: ${apiUrl}`);
 
     // 5. Make the call to the API
     const apiResponse = await fetch(apiUrl, apiFetchOptions);
+    const duration = Date.now() - start;
+
+    if (!apiResponse.ok) {
+      const errorBody = await apiResponse.text();
+      let parsedError;
+      try {
+        parsedError = JSON.parse(errorBody);
+      } catch (e) {
+        parsedError = errorBody;
+      }
+      
+      console.error(`[Node Proxy Error] Vertex AI API returned ${apiResponse.status} after ${duration}ms:`, {
+        url: apiUrl,
+        error: parsedError
+      });
+      return res.status(apiResponse.status).json(parsedError);
+    }
 
     // 6. Respond to the client based on stream type
     if (apiClient.isStreaming) {
-      console.log(`[Node Proxy] Sending STREAMING response for ${apiClient.name}`);
+      console.log(`[Node Proxy] Starting STREAMING response for ${apiClient.name} (${duration}ms to start)`);
       // Set headers for a streaming JSON response
       res.writeHead(apiResponse.status, {
         'Content-Type': 'text/event-stream',
@@ -272,41 +298,35 @@ app.post('/api-proxy', async (req, res) => {
             }
           }
         } catch (error) {
-          console.error(`[Node Proxy] Error processing streaming response for ${apiClient.name}`);
-          console.error(error);
+          console.error(`[Node Proxy Error] Error processing streaming chunk for ${apiClient.name}:`, error);
         }
       });
 
       apiResponse.body.on('end', () => {
         deltaChunk = '';
-        console.log(`[Node Proxy] Vertex stream finished and all data processed for ${apiClient.name}`);
+        console.log(`[Node Proxy] Vertex stream finished for ${apiClient.name}`);
         res.end();
       });
 
       apiResponse.body.on('error', (streamError) => {
-        console.error('[Node Proxy] Error from Vertex stream:', streamError);
+        console.error('[Node Proxy Error] Error from Vertex stream:', streamError);
         if (!res.writableEnded) {
           res.end(JSON.stringify({ proxyError: 'Stream error from Vertex AI', details: streamError.message }));
         }
       });
-
-      res.on('error', (resError) => {
-        console.error('[Node Proxy] Error writing to client response:', resError);
-        // The source stream might need to be destroyed if an error occurs here.
-        if (apiResponse.body && typeof apiResponse.body.destroy === 'function') {
-             apiResponse.body.destroy(resError);
-        }
-      });
     } else {
       // Non-streaming response handling
-      console.log(`[Node Proxy] Sending JSON response for ${apiClient.name}`);
       const data = await apiResponse.json();
+      console.log(`[Node Proxy] Successful JSON response for ${apiClient.name} in ${duration}ms`);
       res.status(apiResponse.status).json(data);
     }
   } catch (error) {
-    console.error(`[Node Proxy] Error proxying request for ${apiClient.name}`);
-    console.error(error)
-    res.status(500).json({ error: error });
+    const duration = Date.now() - start;
+    console.error(`[Node Proxy Error] Internal error after ${duration}ms:`, error);
+    res.status(500).json({ 
+      error: 'Internal Proxy Error', 
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 

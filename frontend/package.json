@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev-server": "tsx server/index.ts",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -13,12 +14,18 @@
     "react-dom": "latest",
     "react-router-dom": "latest",
     "lucide-react": "latest",
-    "@google/genai": "latest"
+    "@google/genai": "latest",
+    "express": "latest",
+    "cors": "latest",
+    "@google-cloud/bigquery": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "@types/express": "latest",
+    "@types/cors": "latest",
     "@vitejs/plugin-react": "latest",
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "tsx": "latest"
   }
 }

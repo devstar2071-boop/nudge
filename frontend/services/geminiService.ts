@@ -39,7 +39,7 @@ export const generateSephoraLensNudges = async (
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash-001',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -66,6 +66,7 @@ export const generateSephoraLensNudges = async (
     });
 
     if (response.text) {
+      console.log(`[Sephora Lens AI] Successfully generated ${JSON.parse(response.text.trim()).length} nudges.`);
       const nudges: LensNudge[] = JSON.parse(response.text.trim());
       // Add a mock relevance score to simulate the "Popularity Engine"
       return nudges.map(n => ({ ...n, relevanceScore: Math.floor(Math.random() * 100) }));
