@@ -3,7 +3,7 @@ import cors from 'cors';
 import { BigQuery } from '@google-cloud/bigquery';
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.BQ_API_PORT || 3001;
 
 // Initialize BigQuery client
 // Note: This requires the GOOGLE_APPLICATION_CREDENTIALS environment variable 

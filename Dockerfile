@@ -55,7 +55,7 @@ EXPOSE 8080
 # Default environment variables (should be overridden at runtime)
 ENV API_BACKEND_PORT=5000
 ENV API_BACKEND_HOST=127.0.0.1
-ENV PORT=3001
+ENV BQ_API_PORT=3001
 ENV API_PAYLOAD_MAX_SIZE=7mb
 
 # Start the application via the entrypoint script
