@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sephora Lens™</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    /* Custom scrollbar for a sleeker look */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    
+    /* Sephora Lens Highlight Animation */
+    @keyframes pulse-border {
+      0% { border-bottom-color: rgba(0, 0, 0, 0.2); }
+      50% { border-bottom-color: rgba(0, 0, 0, 1); }
+      100% { border-bottom-color: rgba(0, 0, 0, 0.2); }
+    }
+    .lens-highlight {
+      border-bottom: 2px dashed #000;
+      cursor: help;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .lens-highlight:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      animation: pulse-border 1.5s infinite;
+    }
+  </style>
+</head>
+<body class="bg-white text-black font-sans antialiased">
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
+<script type="module" src="/index.js"></script></body>
+</html>
