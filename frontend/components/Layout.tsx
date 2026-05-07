@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, User, Menu, Sparkles } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, Sparkles, LogOut } from 'lucide-react';
+import { fetchUserAccountData } from '../services/mockApi.ts';
+import { eraseCookie } from '../services/cookieUtils.ts';
+import { UserProfile } from '../types.ts';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,6 +11,25 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const data = await fetchUserAccountData();
+        setUser(data.profile);
+      } catch (error) {
+        console.error("Failed to load user in Layout", error);
+      }
+    };
+    loadUser();
+  }, []);
+
+  const handleLogout = () => {
+    eraseCookie('nudge_user_id');
+    setUser(null);
+    window.location.reload(); // Reload to trigger a new random user fetch
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -55,8 +77,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 className={`flex flex-col items-center text-xs font-medium ${location.pathname === '/account' ? 'text-black' : 'text-gray-600 hover:text-black'}`}
               >
                 <User className="h-6 w-6 mb-1" />
-                <span className="hidden md:block text-nowrap">Hi Beautiful</span>
+                <span className="hidden md:block text-nowrap">
+                  {user ? `Hi, ${user.name.split(' ')[0]}` : 'Hi Beautiful'}
+                </span>
               </Link>
+
+              {user && (
+                <button 
+                  onClick={handleLogout}
+                  className="flex flex-col items-center text-xs font-medium text-gray-600 hover:text-black"
+                  title="Logout"
+                >
+                  <LogOut className="h-6 w-6 mb-1" />
+                  <span className="hidden md:block">Logout</span>
+                </button>
+              )}
+
               <button className="flex flex-col items-center text-xs font-medium text-gray-600 hover:text-black relative">
                 <ShoppingBag className="h-6 w-6 mb-1" />
                 <span className="hidden md:block">Basket</span>

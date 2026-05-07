@@ -1,13 +1,15 @@
 import { UserProfile, PurchaseHistoryItem, PaginatedResponse, Product } from '../types.ts';
+import { getCookie, setCookie } from './cookieUtils.ts';
 
 // --- CONFIGURATION ---
 // Points to the Node.js Express server (server/index.ts)
 const BACKEND_API_URL = (typeof process !== 'undefined' && process.env && process.env.BACKEND_API_URL) ? process.env.BACKEND_API_URL : '/api';
+const USER_COOKIE_NAME = 'nudge_user_id';
 
 // --- FALLBACK MOCK DATA ---
 // Used if the backend API is not reachable, ensuring the prototype still works.
 const FALLBACK_USER: UserProfile = {
-  id: 'u123',
+  id: 'guest_u123',
   name: 'Jane Doe',
   email: 'jane.doe@example.com',
   beautyTraits: {
@@ -213,20 +215,37 @@ const transformBQToProduct = (bqData: any, index: number): Product => {
  * API 1: Fetch Random User Profile and Paginated Purchase History
  */
 export const fetchUserAccountData = async (
-  userId: string, 
+  userId?: string, 
   page: number = 1, 
   limit: number = 10
 ): Promise<{ profile: UserProfile; purchases: PaginatedResponse<PurchaseHistoryItem> }> => {
   
+  let profileId = userId || getCookie(USER_COOKIE_NAME);
   let profile = FALLBACK_USER;
 
   try {
-    // Fetch a random user from the BigQuery backend
-    const response = await fetch(`${BACKEND_API_URL}/users/random`);
-    if (response.ok) {
-      profile = await response.json();
+    if (profileId) {
+      // Try to fetch specific user if ID is available
+      const response = await fetch(`${BACKEND_API_URL}/users/${profileId}`);
+      if (response.ok) {
+        profile = await response.json();
+      } else {
+        // If specific user not found, fetch a random one
+        const response = await fetch(`${BACKEND_API_URL}/users/random`);
+        if (response.ok) {
+          profile = await response.json();
+          setCookie(USER_COOKIE_NAME, profile.id);
+        }
+      }
     } else {
-      console.warn("Backend API returned error for user. Using fallback.");
+      // Fetch a random user from the BigQuery backend
+      const response = await fetch(`${BACKEND_API_URL}/users/random`);
+      if (response.ok) {
+        profile = await response.json();
+        setCookie(USER_COOKIE_NAME, profile.id);
+      } else {
+        console.warn("Backend API returned error for user. Using fallback.");
+      }
     }
   } catch (error) {
     console.warn("Backend API not reachable for user. Using fallback.", error);
@@ -251,6 +270,22 @@ export const fetchUserAccountData = async (
       });
     }, 400);
   });
+};
+
+/**
+ * Fetch a user profile by ID
+ */
+export const fetchUserById = async (userId: string): Promise<UserProfile> => {
+  try {
+    const response = await fetch(`${BACKEND_API_URL}/users/${userId}`);
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error('User not found');
+  } catch (error) {
+    console.warn(`Failed to fetch user ${userId}, using fallback`, error);
+    return FALLBACK_USER;
+  }
 };
 
 /**

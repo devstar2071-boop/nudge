@@ -13,7 +13,7 @@ export const UserAccountPage: React.FC = () => {
     const loadAccountData = async () => {
       setLoading(true);
       try {
-        const data = await fetchUserAccountData('u123', page, 5); // 5 items per page for history
+        const data = await fetchUserAccountData(undefined, page, 5); // 5 items per page for history
         setUser(data.profile);
         setPurchases(data.purchases);
       } catch (error) {

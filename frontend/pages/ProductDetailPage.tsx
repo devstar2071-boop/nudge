@@ -23,7 +23,7 @@ export const ProductDetailPage: React.FC = () => {
         // Fetch product and mock user concurrently
         const [prodData, userData] = await Promise.all([
           fetchProductById(id || 'prod-0'),
-          fetchUserAccountData('u123', 1, 1) // Just need profile
+          fetchUserAccountData(undefined, 1, 1) // Just need profile, will use cookie if available
         ]);
         
         if (prodData) {

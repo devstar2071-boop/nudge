@@ -149,7 +149,7 @@ app.get('/api/users/random', async (req, res) => {
 
     // Format to match the frontend UserProfile interface
     const userProfile = {
-      id: row.id || 'u123',
+      id: String(row.id || 'u123'),
       name: row.name || 'Jane Doe',
       email: row.email || 'jane.doe@example.com',
       beautyTraits: {
@@ -168,6 +168,78 @@ app.get('/api/users/random', async (req, res) => {
       stack: error.stack
     });
     res.status(500).json({ error: 'Failed to fetch random user', details: error.message });
+  }
+});
+
+/**
+ * API 3.5: Fetch a user by ID
+ */
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const query = `
+      SELECT 
+        u.int64_field_0 as id, 
+        'Test User' as name, 
+        'user@example.com' as email, 
+        'Gold' as loyaltyTier, 
+        100 as points,
+        JSON_VALUE(bp.skincare_routine, '$.skin_type') as skinType, 
+        JSON_VALUE(bp.skincare_routine, '$.skin_concerns') as skinConcerns, 
+        JSON_VALUE(bp.haircare_routine, '$.hair_type') as hairType
+      FROM \`sephora-seatech26sin-207.verified_glow.users\` u
+      LEFT JOIN \`sephora-seatech26sin-207.verified_glow.beauty_profiles\` bp 
+        ON u.int64_field_0 = bp.user_id
+      WHERE u.int64_field_0 = CAST(@userId AS INT64)
+      LIMIT 1
+    `;
+
+    const options = {
+      query: query,
+      params: { userId },
+    };
+
+    const [rows] = await bigquery.query(options);
+
+    if (rows.length === 0) {
+      console.warn(`[BigQuery API] User not found: ${userId}`);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const row = rows[0];
+    
+    // Parse skinConcerns
+    let parsedSkinConcerns: string[] = [];
+    if (typeof row.skinConcerns === 'string') {
+      try {
+        parsedSkinConcerns = JSON.parse(row.skinConcerns);
+      } catch (e) {
+        parsedSkinConcerns = row.skinConcerns.split(',').map((s: string) => s.trim());
+      }
+    } else if (Array.isArray(row.skinConcerns)) {
+      parsedSkinConcerns = row.skinConcerns;
+    }
+
+    const userProfile = {
+      id: String(row.id),
+      name: row.name || 'Jane Doe',
+      email: row.email || 'jane.doe@example.com',
+      beautyTraits: {
+        skinType: row.skinType || 'Dry',
+        skinConcerns: parsedSkinConcerns.length > 0 ? parsedSkinConcerns : ['Redness', 'Dullness'],
+        hairType: row.hairType || 'Wavy',
+      },
+      loyaltyTier: row.loyaltyTier || 'Rouge',
+      points: row.points || 1250,
+    };
+
+    res.json(userProfile);
+  } catch (error: any) {
+    console.error(`[BigQuery API Error] Failed to fetch user ${req.params.id}:`, {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ error: 'Failed to fetch user', details: error.message });
   }
 });
 
