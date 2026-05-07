@@ -150,9 +150,9 @@ const transformBQToProduct = (bqData: any, index: number): Product => {
   const firstVariant = bqData.variants?.[0] || {};
   
   let price = 60;
-  const pricedItem = firstVariant.prices?.sellingPrices?.find((p: any) => p.price !== undefined);
+  const pricedItem = firstVariant.prices?.sellingPrices?.find((p: any) => p.price !== undefined && p.price !== null);
   if (pricedItem) {
-    price = pricedItem.price;
+    price = Number(pricedItem.price);
   }
 
   const imageUrl = firstVariant.images?.find((img: any) => img.isPrimary)?.urls?.closeup 
@@ -171,8 +171,8 @@ const transformBQToProduct = (bqData: any, index: number): Product => {
     ingredients: parseIngredients(bqData.content?.en?.ingredients || ''),
     variants: bqData.variants?.map((v: any) => {
       let vPrice = price;
-      const vPricedItem = v.prices?.sellingPrices?.find((p: any) => p.price !== undefined);
-      if (vPricedItem) vPrice = vPricedItem.price;
+      const vPricedItem = v.prices?.sellingPrices?.find((p: any) => p.price !== undefined && p.price !== null);
+      if (vPricedItem) vPrice = Number(vPricedItem.price);
       
       return {
         id: v.variantId,
