@@ -32,11 +32,14 @@ export const generateSephoraLensNudges = async (
 
       TASK:
       Select exactly 3 key ingredients from the product's ingredient list that are most relevant to THIS specific user's profile.
-      For each selected ingredient, provide:
-      1. A "teaser": A very short, catchy 2-3 word phrase (max 25 characters) summarizing the main benefit for them (e.g., "Hydrates Dry Skin", "Targets Redness").
-      2. A "summary": A 2-sentence personalized explanation of why this ingredient is good for the user.
+      For each selected ingredient:
+      1. Write a 2-sentence summary explaining WHY it matters for them. 
+      2. Frame why it matters as a short, inquisitive question (e.g., "Is this foundation oil-free?", "Does this target redness?").
       
       The tone should be helpful, expert, and mimic Sephora's brand voice.
+      
+      Example summary: "Niacinamide is perfect for your dry skin as it helps strengthen the moisture barrier. It also directly targets the redness you've been concerned about."
+      Example question: "Does this serum target redness?"
     `;
 
     const response = await ai.models.generateContent({
@@ -54,16 +57,16 @@ export const generateSephoraLensNudges = async (
                 type: Type.STRING,
                 description: 'The exact name of the ingredient from the product list.',
               },
-              teaser: {
-                type: Type.STRING,
-                description: 'A 2-3 word benefit teaser (max 25 characters).',
-              },
               summary: {
                 type: Type.STRING,
                 description: 'A 2-sentence personalized explanation of why this ingredient is good for the user.',
               },
+              framingQuestion: {
+                type: Type.STRING,
+                description: 'A relevant question framed around why the ingredient matters to the user (e.g., "Is this foundation oil-free?").',
+              }
             },
-            required: ['ingredient', 'teaser', 'summary'],
+            required: ['ingredient', 'summary', 'framingQuestion'],
           },
         },
         temperature: 0.7,
@@ -71,7 +74,6 @@ export const generateSephoraLensNudges = async (
     });
 
     if (response.text) {
-      console.log(`[Sephora Lens AI] Successfully generated ${JSON.parse(response.text.trim()).length} nudges.`);
       const nudges: LensNudge[] = JSON.parse(response.text.trim());
       // Add a mock relevance score to simulate the "Popularity Engine"
       return nudges.map(n => ({ ...n, relevanceScore: Math.floor(Math.random() * 100) }));

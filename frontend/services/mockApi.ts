@@ -122,9 +122,24 @@ const FALLBACK_BQ_PRODUCT = {
 
 // --- DATA TRANSFORMERS ---
 
+const stripHtml = (html: string): string => {
+  if (!html) return '';
+  // Remove HTML tags and replace common entities
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+};
+
 const parseIngredients = (rawIngredients: string): string[] => {
   if (!rawIngredients) return [];
-  const lines = rawIngredients.split('\n');
+  // Strip HTML before parsing
+  const cleanIngredients = stripHtml(rawIngredients);
+  const lines = cleanIngredients.split('\n');
   const ingredientsSet = new Set<string>();
 
   lines.forEach(line => {
@@ -159,11 +174,13 @@ const transformBQToProduct = (bqData: any, index: number): Product => {
     || firstVariant.images?.[0]?.urls?.closeup 
     || `https://picsum.photos/seed/item${index}/400/500`;
 
+  const rawDescription = bqData.content?.en?.description || '';
+
   return {
     id: bqData.productId,
     brand: bqData.brand?.name_en || 'Unknown Brand',
     name: bqData.name_en,
-    description: bqData.content?.en?.description || '',
+    description: stripHtml(rawDescription),
     price: price,
     imageUrl: imageUrl,
     rating: 4.8,

@@ -55,7 +55,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 className={`flex flex-col items-center text-xs font-medium ${location.pathname === '/account' ? 'text-black' : 'text-gray-600 hover:text-black'}`}
               >
                 <User className="h-6 w-6 mb-1" />
-                <span className="hidden md:block">Sign In</span>
+                <span className="hidden md:block text-nowrap">Hi Beautiful</span>
               </Link>
               <button className="flex flex-col items-center text-xs font-medium text-gray-600 hover:text-black relative">
                 <ShoppingBag className="h-6 w-6 mb-1" />

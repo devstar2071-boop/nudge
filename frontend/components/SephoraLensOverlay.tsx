@@ -76,9 +76,11 @@ export const SephoraLensOverlay: React.FC<SephoraLensOverlayProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <span className="lens-highlight font-medium text-black flex items-center inline-flex">
-        {displayText || ingredient}
-        <Sparkles className="h-3 w-3 ml-0.5 text-purple-600" />
+      <span className="lens-highlight font-medium text-black flex items-center inline-flex overflow-hidden">
+        <span className="line-clamp-2">
+          {displayText || ingredient}
+        </span>
+        <Sparkles className="h-3 w-3 ml-1 text-purple-600 flex-shrink-0" />
       </span>
 
       {isOpen && (
