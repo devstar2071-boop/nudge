@@ -78,14 +78,23 @@ export const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumbs */}
-      <nav className="text-xs text-gray-500 mb-8 flex space-x-2">
-        <span>Skincare</span>
-        <span>/</span>
-        <span>Moisturizers</span>
-        <span>/</span>
-        <span className="text-black font-medium">{product.name}</span>
-      </nav>
+      {/* Dynamic Breadcrumbs */}
+      {product.categories && product.categories.length > 0 ? (
+        <nav className="text-xs text-gray-500 mb-8 flex flex-wrap items-center space-x-2">
+          {product.categories[0].slug.split('/').map((part, idx, arr) => (
+            <React.Fragment key={idx}>
+              <span className="capitalize">{part.replace(/-/g, ' ')}</span>
+              {idx < arr.length - 1 && <span>/</span>}
+            </React.Fragment>
+          ))}
+          <span>/</span>
+          <span className="text-black font-medium">{product.name}</span>
+        </nav>
+      ) : (
+        <nav className="text-xs text-gray-500 mb-8 flex space-x-2">
+          <span className="text-black font-medium">{product.name}</span>
+        </nav>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Product Image */}

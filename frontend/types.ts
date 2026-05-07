@@ -36,6 +36,12 @@ export interface Variant {
   inStock: boolean;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface Product {
   id: string;
   brand: string;
@@ -47,6 +53,7 @@ export interface Product {
   reviewsCount: number;
   ingredients: string[];
   variants: Variant[];
+  categories: Category[];
 }
 
 export interface LensNudge {

@@ -72,16 +72,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <nav className="hidden md:block border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <ul className="flex space-x-8 py-3 text-sm font-medium text-gray-800">
-              <li className="hover:underline cursor-pointer hover:text-black">Brands</li>
-              <li className="hover:underline cursor-pointer hover:text-black">Makeup</li>
-              <li className="hover:underline cursor-pointer hover:text-black">Skincare</li>
-              <li className="hover:underline cursor-pointer hover:text-black">Hair</li>
-              <li className="hover:underline cursor-pointer hover:text-black">Fragrance</li>
-              <li className="hover:underline cursor-pointer hover:text-black">Tools & Brushes</li>
-              <li className="text-red-600 hover:underline cursor-pointer">Sale</li>
+              <li className="hover:underline cursor-pointer hover:text-black"><Link to="/products">Brands</Link></li>
+              <li className="hover:underline cursor-pointer hover:text-black"><Link to="/products">Makeup</Link></li>
+              <li className="hover:underline cursor-pointer hover:text-black"><Link to="/products">Skincare</Link></li>
+              <li className="hover:underline cursor-pointer hover:text-black"><Link to="/products">Hair</Link></li>
+              <li className="hover:underline cursor-pointer hover:text-black"><Link to="/products">Fragrance</Link></li>
+              <li className="hover:underline cursor-pointer hover:text-black"><Link to="/products">Tools & Brushes</Link></li>
+              <li className="text-red-600 hover:underline cursor-pointer"><Link to="/products">Sale</Link></li>
               <li className="flex items-center text-purple-600 hover:underline cursor-pointer ml-auto">
-                <Sparkles className="h-4 w-4 mr-1" />
-                Sephora Lens AI
+                <Link to="/products" className="flex items-center">
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  Sephora Lens AI
+                </Link>
               </li>
             </ul>
           </div>

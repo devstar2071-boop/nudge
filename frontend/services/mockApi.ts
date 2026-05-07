@@ -169,6 +169,11 @@ const transformBQToProduct = (bqData: any, index: number): Product => {
     rating: 4.8,
     reviewsCount: parseInt(firstVariant.reviews?.totals || '124', 10) || 124,
     ingredients: parseIngredients(bqData.content?.en?.ingredients || ''),
+    categories: bqData.categories?.map((cat: any) => ({
+      id: cat.category_id,
+      name: cat.labels?.en || 'Unknown Category',
+      slug: cat.slug || ''
+    })) || [],
     variants: bqData.variants?.map((v: any) => {
       let vPrice = price;
       const vPricedItem = v.prices?.sellingPrices?.find((p: any) => p.price !== undefined && p.price !== null);
