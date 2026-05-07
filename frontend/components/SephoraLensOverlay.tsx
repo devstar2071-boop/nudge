@@ -8,13 +8,17 @@ interface SephoraLensOverlayProps {
   nudge?: LensNudge;
   productId: string;
   userId: string;
+  displayText?: string;
+  popoverPosition?: 'left' | 'center' | 'right';
 }
 
 export const SephoraLensOverlay: React.FC<SephoraLensOverlayProps> = ({ 
   ingredient, 
   nudge, 
   productId, 
-  userId 
+  userId,
+  displayText,
+  popoverPosition = 'center'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState<boolean>(false);
@@ -47,8 +51,24 @@ export const SephoraLensOverlay: React.FC<SephoraLensOverlayProps> = ({
 
   // If there's no nudge for this ingredient, just render plain text
   if (!nudge) {
-    return <span>{ingredient}</span>;
+    return <span>{displayText || ingredient}</span>;
   }
+
+  const getPopoverClass = () => {
+    switch (popoverPosition) {
+      case 'left': return 'left-0';
+      case 'right': return 'right-0';
+      default: return 'left-1/2 transform -translate-x-1/2';
+    }
+  };
+
+  const getArrowClass = () => {
+    switch (popoverPosition) {
+      case 'left': return 'left-6';
+      case 'right': return 'right-6';
+      default: return 'left-1/2 transform -translate-x-1/2';
+    }
+  };
 
   return (
     <span 
@@ -57,13 +77,13 @@ export const SephoraLensOverlay: React.FC<SephoraLensOverlayProps> = ({
       onMouseLeave={handleMouseLeave}
     >
       <span className="lens-highlight font-medium text-black flex items-center inline-flex">
-        {ingredient}
+        {displayText || ingredient}
         <Sparkles className="h-3 w-3 ml-0.5 text-purple-600" />
       </span>
 
       {isOpen && (
         <div 
-          className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-72 bg-white border border-gray-200 shadow-xl rounded-lg p-4 text-left"
+          className={`absolute z-50 bottom-full mb-2 w-72 bg-white border border-gray-200 shadow-xl rounded-lg p-4 text-left ${getPopoverClass()}`}
           style={{ animation: 'fadeIn 0.2s ease-out' }}
         >
           <div className="flex items-center space-x-2 mb-2 border-b border-gray-100 pb-2">
@@ -107,7 +127,7 @@ export const SephoraLensOverlay: React.FC<SephoraLensOverlayProps> = ({
           </div>
           
           {/* Tooltip Arrow */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
+          <div className={`absolute top-full -mt-px ${getArrowClass()}`}>
             <div className="w-3 h-3 bg-white border-b border-r border-gray-200 transform rotate-45"></div>
           </div>
         </div>

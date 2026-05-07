@@ -164,19 +164,44 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Sephora Lens Banner */}
-          <div className="mt-12 bg-gradient-to-r from-purple-50 to-white border border-purple-100 rounded-lg p-4 shadow-sm">
+          <div className="mt-12 bg-gradient-to-r from-purple-50 to-white border border-purple-100 rounded-lg p-5 shadow-sm">
             <div className="flex items-start space-x-3">
               <div className="bg-purple-600 p-2 rounded-full flex-shrink-0 mt-1 shadow-lg shadow-purple-200 animate-bounce" style={{ animationDuration: '3s' }}>
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="text-sm font-bold text-purple-900 flex items-center">
                   Sephora Lens™ Active
                   {lensLoading && <span className="ml-2 text-xs font-normal text-purple-600 animate-pulse">Analyzing profile...</span>}
                 </h3>
-                <p className={`text-xs text-purple-800 mt-1 ${lensLoading ? 'animate-pulse' : ''}`}>
-                  We've highlighted ingredients below that are specifically relevant to your <strong>{user?.beautyTraits.skinType}</strong> skin profile. Hover over them to learn why.
+                <p className={`text-xs text-purple-800 mt-1 mb-4 ${lensLoading ? 'animate-pulse' : ''}`}>
+                  We've highlighted ingredients specifically relevant to your <strong>{user?.beautyTraits.skinType}</strong> skin profile.
                 </p>
+
+                {!lensLoading && nudges.length > 0 && (
+                  <div className="mt-4 relative">
+                    {/* Increased virtual space to pt-80 -mt-80 (320px) to prevent popover clipping */}
+                    <div className="flex flex-nowrap overflow-x-auto pt-80 -mt-80 pb-4 gap-3 scrollbar-hide -mx-1 px-1 items-end">
+                      {nudges.map((nudge, idx) => (
+                        <div 
+                          key={idx} 
+                          className="flex-shrink-0 w-[65%] sm:w-[45%] bg-white border border-purple-200 rounded-full px-3 py-1 shadow-sm hover:border-purple-400 transition-colors text-center text-[10px]"
+                        >
+                          <SephoraLensOverlay 
+                            ingredient={nudge.ingredient} 
+                            nudge={nudge}
+                            productId={product.id}
+                            userId={user?.id || 'unknown'}
+                            displayText={nudge.teaser}
+                            popoverPosition={idx === 0 ? 'left' : (idx === nudges.length - 1 ? 'right' : 'center')}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Visual fade effect for scrolling indication */}
+                    <div className="absolute right-0 bottom-4 w-12 h-8 bg-gradient-to-l from-white/80 to-transparent pointer-events-none"></div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

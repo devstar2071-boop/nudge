@@ -32,10 +32,11 @@ export const generateSephoraLensNudges = async (
 
       TASK:
       Select exactly 3 key ingredients from the product's ingredient list that are most relevant to THIS specific user's profile.
-      For each selected ingredient, write a 2-sentence summary explaining WHY it matters for them. 
-      The tone should be helpful, expert, and mimic Sephora's brand voice.
+      For each selected ingredient, provide:
+      1. A "teaser": A very short, catchy 2-3 word phrase (max 25 characters) summarizing the main benefit for them (e.g., "Hydrates Dry Skin", "Targets Redness").
+      2. A "summary": A 2-sentence personalized explanation of why this ingredient is good for the user.
       
-      Example summary: "Niacinamide is perfect for your dry skin as it helps strengthen the moisture barrier. It also directly targets the redness you've been concerned about."
+      The tone should be helpful, expert, and mimic Sephora's brand voice.
     `;
 
     const response = await ai.models.generateContent({
@@ -53,12 +54,16 @@ export const generateSephoraLensNudges = async (
                 type: Type.STRING,
                 description: 'The exact name of the ingredient from the product list.',
               },
+              teaser: {
+                type: Type.STRING,
+                description: 'A 2-3 word benefit teaser (max 25 characters).',
+              },
               summary: {
                 type: Type.STRING,
                 description: 'A 2-sentence personalized explanation of why this ingredient is good for the user.',
               },
             },
-            required: ['ingredient', 'summary'],
+            required: ['ingredient', 'teaser', 'summary'],
           },
         },
         temperature: 0.7,

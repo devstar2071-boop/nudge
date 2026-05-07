@@ -58,6 +58,7 @@ export interface Product {
 
 export interface LensNudge {
   ingredient: string;
+  teaser: string;
   summary: string;
   relevanceScore?: number;
 }
