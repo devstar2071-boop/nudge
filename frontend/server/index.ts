@@ -177,15 +177,33 @@ app.get('/api/users/random', async (req, res) => {
 app.post('/api/interactions', async (req, res) => {
   try {
     const { userId, productId, ingredient, action } = req.body;
-    console.log(`[Analytics] Tracked ${action} for ${ingredient} by user ${userId} on product ${productId}`);
+    console.log(`[Analytics] Logging ${action} for ${ingredient} to BigQuery...`);
     
-    // In a full implementation, this would insert a row into a BigQuery analytics table:
-    // const query = `INSERT INTO \`sephora-seatech26sin-207.verified_glow.interactions\` ...`
+    const datasetId = 'verified_glow';
+    const tableId = 'interactions';
     
+    const rows = [{
+      userId: String(userId),
+      productId: String(productId),
+      ingredient: String(ingredient),
+      action: String(action),
+      timestamp: bigquery.timestamp(new Date())
+    }];
+
+    await bigquery
+      .dataset(datasetId)
+      .table(tableId)
+      .insert(rows);
+
+    console.log(`[Analytics] Successfully stored interaction in BigQuery`);
     res.json({ success: true });
-  } catch (error) {
-    console.error('Error tracking interaction:', error);
-    res.status(500).json({ error: 'Failed to track interaction' });
+  } catch (error: any) {
+    console.error('[BigQuery API Error] Failed to track interaction:', {
+      message: error.message,
+      stack: error.stack,
+      body: req.body
+    });
+    res.status(500).json({ error: 'Failed to track interaction', details: error.message });
   }
 });
 
