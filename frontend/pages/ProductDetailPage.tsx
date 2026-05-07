@@ -165,7 +165,7 @@ export const ProductDetailPage: React.FC = () => {
                   Sephora Lens™ Active
                   {lensLoading && <span className="ml-2 text-xs font-normal text-purple-600 animate-pulse">Analyzing profile...</span>}
                 </h3>
-                <p className="text-xs text-purple-800 mt-1">
+                <p className={`text-xs text-purple-800 mt-1 ${lensLoading ? 'animate-pulse' : ''}`}>
                   We've highlighted ingredients below that are specifically relevant to your <strong>{user?.beautyTraits.skinType}</strong> skin profile. Hover over them to learn why.
                 </p>
               </div>
